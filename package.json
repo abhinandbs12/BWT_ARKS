@@ -19,6 +19,7 @@
     "date-fns": "^3.0.0",
     "firebase": "^10.7.0",
     "framer-motion": "^10.16.0",
+    "jspdf": "^4.2.0",
     "lucide-react": "^0.344.0",
     "papaparse": "^5.4.0",
     "pdfjs-dist": "^5.5.207",

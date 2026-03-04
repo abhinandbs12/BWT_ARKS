@@ -14,7 +14,7 @@ const ollamaClient = axios.create({
 // ===== Health Check =====
 export async function checkOllamaHealth(): Promise<{ connected: boolean; models: string[] }> {
   try {
-    const res = await ollamaClient.get('/api/tags')
+    const res = await ollamaClient.get('/api/tags', { timeout: 5000 })
     const models: string[] = (res.data?.models || []).map((m: { name: string }) => m.name)
     return { connected: true, models }
   } catch {
@@ -96,6 +96,13 @@ OUTPUT this exact JSON structure:
   "tier": "<Poor|Fair|Good|Very Good|Excellent>",
   "loanEligibility": "<amount range @ rate%>"
 }`
+
+  // Quick health check — skip 2-min wait if Ollama is offline
+  const health = await checkOllamaHealth()
+  if (!health.connected) {
+    console.warn('Ollama offline, using smart numeric fallback')
+    return buildFallbackAnalysis(transactions)
+  }
 
   try {
     const raw = await generate(prompt, 1500)
