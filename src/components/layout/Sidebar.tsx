@@ -29,12 +29,12 @@ function cleanInitials(name?: string, email?: string): string {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/credscore', icon: Star, label: 'CredScore' },
-  { path: '/scamshield', icon: ShieldAlert, label: 'ScamShield' },
-  { path: '/transactions', icon: List, label: 'Transactions' },
-  { path: '/loans', icon: Banknote, label: 'Loans' },
-  { path: '/automations', icon: Workflow, label: 'Automations' },
+  { path: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/credscore',    icon: Star,            label: 'CredScore' },
+  { path: '/transactions', icon: List,            label: 'Transactions' },
+  { path: '/scamshield',   icon: ShieldAlert,     label: 'ScamShield' },
+  { path: '/loans',        icon: Banknote,        label: 'Loans' },
+  { path: '/automations',  icon: Workflow,        label: 'Automations' },
 ]
 
 export default function Sidebar() {
@@ -66,28 +66,16 @@ export default function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-border bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-score-gradient flex items-center justify-center shadow-sm">
-              <TrendingUp className="w-5 h-5 text-white" />
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-score-gradient flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <div className="font-bold text-neutral-dark text-lg leading-none tracking-tight">CredIQ</div>
-              <div className="text-xs text-primary font-medium">AI Finance Platform</div>
-            </div>
+            <span className="font-bold text-neutral-dark text-xl tracking-tight">CredIQ</span>
           </div>
-          {/* Mobile close */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden text-neutral-gray hover:text-neutral-dark p-1 rounded"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          {/* Desktop collapse */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            title="Collapse sidebar"
-            className="hidden md:flex items-center justify-center w-7 h-7 rounded-md text-neutral-gray hover:text-neutral-dark hover:bg-neutral-light transition-colors"
+            className="text-neutral-gray hover:text-neutral-dark p-1 rounded-md hover:bg-neutral-light transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -95,28 +83,25 @@ export default function Sidebar() {
 
         {/* Score pill */}
         {credScore && (
-          <div className="mx-3 mt-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-primary-dark font-semibold">CredScore</span>
-              <div className="flex items-center gap-1">
-                <span className="font-mono font-bold text-primary text-base">{credScore.score}</span>
-                <span className="text-xs text-neutral-gray">/850</span>
+          <div className="mx-4 mt-4 px-4 py-3 rounded-xl bg-primary/5 border border-primary/15">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-neutral-gray mb-0.5">Your CredScore</p>
+                <p className="text-xl font-bold text-primary">{credScore.score} <span className="text-xs font-normal text-neutral-gray">/850</span></p>
               </div>
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary">{credScore.tier}</span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-primary/20">
+            <div className="w-full h-1 rounded-full bg-primary/15 mt-2">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-1000"
                 style={{ width: `${((credScore.score - 300) / 550) * 100}%` }}
               />
             </div>
-            <div className="text-right mt-1">
-              <span className="text-xs text-primary font-medium">{credScore.tier}</span>
-            </div>
           </div>
         )}
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
             <NavLink
               key={path}
@@ -124,53 +109,40 @@ export default function Sidebar() {
               onClick={() => { if (window.innerWidth < 768) setSidebarOpen(false) }}
               className={({ isActive }) =>
                 cn(
-                  'nav-item',
-                  isActive && 'active',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                  isActive
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-neutral-gray hover:text-neutral-dark hover:bg-neutral-light',
                 )
               }
             >
-              <Icon className="w-5 h-5 shrink-0" />
-              <span className="text-sm">{label}</span>
+              <Icon className="w-4 h-4 shrink-0" />
+              <span>{label}</span>
             </NavLink>
           ))}
         </nav>
 
         {/* Ollama status */}
-        <div className="mx-3 mb-2 px-3 py-2 rounded-xl bg-neutral-light border border-neutral-border">
-          <div className="flex items-center gap-2">
-            <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0', ollamaConnected ? 'bg-purple-100' : 'bg-neutral-200')}>
-              <Bot className={cn('w-4 h-4', ollamaConnected ? 'text-purple-600' : 'text-neutral-gray')} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-medium text-neutral-dark truncate">
-                {ollamaModel || 'qwen2.5-coder:7b'}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'w-1.5 h-1.5 rounded-full',
-                    ollamaConnected ? 'bg-success animate-pulse' : 'bg-neutral-gray',
-                  )}
-                />
-                <span className="text-xs text-neutral-gray">
-                  {ollamaConnected ? 'AI Ready' : 'AI Offline'}
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="mx-3 mb-2 px-3 py-2.5 rounded-lg border border-neutral-border flex items-center gap-2.5">
+          <div className={cn('w-2 h-2 rounded-full shrink-0', ollamaConnected ? 'bg-green-500 animate-pulse' : 'bg-neutral-300')} />
+          <Bot className="w-3.5 h-3.5 text-neutral-gray shrink-0" />
+          <span className="text-xs text-neutral-gray truncate flex-1">{ollamaModel || 'qwen2.5-coder:7b'}</span>
+          <span className={cn('text-xs font-medium', ollamaConnected ? 'text-green-600' : 'text-neutral-gray')}>
+            {ollamaConnected ? 'Live' : 'Off'}
+          </span>
         </div>
 
         {/* User + logout */}
-        <div className="border-t border-neutral-border px-3 py-3 bg-neutral-light/50">
+        <div className="border-t border-neutral-border px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-score-gradient flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-score-gradient flex items-center justify-center text-white font-bold text-sm shrink-0">
               {cleanInitials(user?.name, user?.email)}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-neutral-dark truncate">
+              <p className="text-sm font-semibold text-neutral-dark truncate leading-tight">
                 {getDisplayName(user?.name, user?.email)}
-              </div>
-              <div className="text-xs text-neutral-gray truncate">{user?.email || user?.phone || ''}</div>
+              </p>
+              <p className="text-xs text-neutral-gray truncate">{user?.email || user?.phone || ''}</p>
             </div>
             <button
               onClick={handleLogout}

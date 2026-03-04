@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Workflow, Zap, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  RefreshCw, ExternalLink, ChevronRight, Circle,
+  RefreshCw, ExternalLink, ChevronRight, Circle, Send,
 } from 'lucide-react'
 import {
   checkN8nHealth,
   getEventLog,
   WORKFLOW_WEBHOOKS,
+  triggerAutomation,
   type AutomationEvent,
   type AutomationEventType,
 } from '@/services/n8n'
 import { useAppStore } from '@/store/useAppStore'
 import { formatDate } from '@/utils/helpers'
+import toast from 'react-hot-toast'
 
 const STATUS_COLORS: Record<AutomationEvent['status'], string> = {
   success: 'text-success bg-success-light',
@@ -37,9 +39,10 @@ const WORKFLOW_DOCS: Partial<Record<AutomationEventType, string[]>> = {
 }
 
 export default function AutomationsPage() {
-  const { credScore, user } = useAppStore()
+  const { credScore, user, transactions } = useAppStore()
   const [n8nOnline, setN8nOnline] = useState<boolean | null>(null)
   const [events, setEvents] = useState<AutomationEvent[]>([])
+  const [testing, setTesting] = useState<AutomationEventType | null>(null)
   const [checkingHealth, setCheckingHealth] = useState(false)
 
   const refreshLog = useCallback(() => setEvents(getEventLog()), [])
@@ -60,6 +63,27 @@ export default function AutomationsPage() {
 
   const totalSuccess = events.filter((e) => e.status === 'success').length
   const totalFired   = events.length
+
+  const handleTest = async (type: AutomationEventType) => {
+    setTesting(type)
+    const largestDebit = transactions
+      .filter((t) => t.type === 'DEBIT' && t.status === 'SUCCESS')
+      .sort((a, b) => b.amount - a.amount)[0]
+    const payload: Record<string, unknown> =
+      type === 'score_calculated'         ? { score: credScore?.score || 720, tier: credScore?.tier || 'Good', phone: user?.phone || user?.email || '+916238046005' }
+      : type === 'scam_detected'          ? { input: '+91 9876543210', riskLevel: 'critical', riskScore: 98, scamType: 'fake_bank_call' }
+      : type === 'loan_applied'           ? { loanType: 'Microloan', provider: 'Stashfin NBFC', amount: 25000, score: credScore?.score || 720 }
+      : type === 'csv_uploaded'           ? { txCount: transactions.length || 180, monthsCovered: 6 }
+      : type === 'suspicious_transaction' ? { amount: largestDebit?.amount || 15000, description: largestDebit?.description || 'Large UPI Transfer', merchant: largestDebit?.merchantName || 'Unknown Merchant' }
+      : type === 'score_improved'         ? { oldScore: Math.max((credScore?.score || 720) - 25, 300), newScore: credScore?.score || 720, improvement: 25, tier: credScore?.tier || 'Good' }
+      : { test: true }
+    const evt = await triggerAutomation(type, payload)
+    refreshLog()
+    setTesting(null)
+    if (evt.status === 'success') toast.success(`WhatsApp sent! (${evt.durationMs}ms)`)
+    else if (evt.status === 'offline') toast('n8n offline — start Docker', { icon: '⚠️' })
+    else toast.error('Webhook failed — check n8n')
+  }
 
   return (
     <div className="space-y-6">
@@ -154,10 +178,23 @@ export default function AutomationsPage() {
                         <code className="text-xs text-neutral-gray font-mono">POST {wf.path}</code>
                       </div>
                     </div>
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-                      Auto
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+                        Auto
+                      </span>
+                      <button
+                        onClick={() => handleTest(type)}
+                        disabled={testing === type}
+                        className="flex items-center gap-1 text-xs text-primary hover:text-primary-dark font-medium px-2 py-0.5 rounded-md hover:bg-primary/10 transition-colors disabled:opacity-50"
+                        title="Send test WhatsApp now"
+                      >
+                        {testing === type
+                          ? <RefreshCw className="w-3 h-3 animate-spin" />
+                          : <Send className="w-3 h-3" />}
+                        {testing === type ? 'Sending…' : 'Send now'}
+                      </button>
+                    </div>
                   </div>
 
                   <p className="text-xs text-neutral-gray mb-3">{wf.description}</p>
@@ -204,7 +241,7 @@ export default function AutomationsPage() {
           <div className="card text-center py-12 text-neutral-gray">
             <Workflow className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="font-medium">Nothing has fired yet</p>
-            <p className="text-sm mt-1">Click "Test Fire" on any card above to try it out</p>
+            <p className="text-sm mt-1">Automations fire automatically when you use the app</p>
           </div>
         ) : (
           <div className="space-y-2">
