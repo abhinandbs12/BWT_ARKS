@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #3B82F6;
+    --color-primary-dark: #1E40AF;
+    --color-primary-light: #DBEAFE;
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-danger: #EF4444;
+    --color-text: #111827;
+    --color-text-secondary: #6B7280;
+    --color-background: #F9FAFB;
+    --color-border: #E5E7EB;
+    --color-purple: #8B5CF6;
+    --font-sans: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-neutral-light text-neutral-dark font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  input, textarea, select {
+    @apply outline-none;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-light;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-gray;
+  }
+}
+
+@layer components {
+  /* Card component */
+  .card {
+    @apply bg-white rounded-lg border border-neutral-border shadow-card p-6;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:border-primary-light cursor-pointer;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-md transition-all duration-150 select-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white px-6 py-3 hover:bg-primary-hover active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply btn border border-primary text-primary bg-white px-6 py-3 hover:bg-primary-light active:scale-95;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger text-white px-6 py-3 hover:bg-red-600 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply btn text-neutral-gray px-4 py-2 hover:bg-neutral-light hover:text-neutral-dark;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+    min-height: 36px;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-lg;
+    min-height: 52px;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .badge-ai {
+    @apply badge bg-purple-100 text-purple-700 border border-purple-200;
+  }
+
+  .badge-success {
+    @apply badge bg-success-light text-green-700;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-light text-yellow-700;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger-light text-red-700;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-light text-primary-dark;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full h-12 px-4 rounded-md border border-neutral-border bg-white text-neutral-dark placeholder-neutral-gray transition-all duration-150;
+    @apply focus:border-primary focus:ring-2 focus:ring-primary-light focus:outline-none;
+  }
+
+  .input-error {
+    @apply border-danger focus:border-danger focus:ring-danger-light;
+  }
+
+  /* Score display */
+  .score-gradient-text {
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply rounded animate-shimmer;
+    background: linear-gradient(90deg, #F0F0F0 25%, #E8E8E8 50%, #F0F0F0 75%);
+    background-size: 200% 100%;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-2 rounded-full bg-neutral-border overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-1000 ease-out;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-gray font-medium transition-all duration-150 cursor-pointer;
+  }
+
+  .nav-item:hover {
+    @apply bg-neutral-light text-neutral-dark;
+  }
+
+  .nav-item.active {
+    @apply bg-primary-light text-primary-dark;
+  }
+
+  /* Alert card */
+  .alert-info {
+    @apply flex gap-3 p-4 rounded-lg bg-primary-light border-l-4 border-primary;
+  }
+
+  .alert-warning {
+    @apply flex gap-3 p-4 rounded-lg bg-warning-light border-l-4 border-warning;
+  }
+
+  .alert-danger {
+    @apply flex gap-3 p-4 rounded-lg bg-danger-light border-l-4 border-danger;
+  }
+
+  .alert-success {
+    @apply flex gap-3 p-4 rounded-lg bg-success-light border-l-4 border-success;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Focus visible only for keyboard nav */
+  .focus-visible-only:focus {
+    outline: none;
+  }
+  .focus-visible-only:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2;
+  }
+
+  /* Smooth number transitions */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

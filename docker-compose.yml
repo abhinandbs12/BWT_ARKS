@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Ollama AI Service (7B model)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: crediq-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_NO_TELEMETRY=true
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Ollama model initializer - pulls qwen2.5-coder:7b on startup
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: crediq-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "OLLAMA_HOST=ollama:11434 ollama pull qwen2.5-coder:7b &&
+       echo 'Model qwen2.5-coder:7b pulled successfully'"
+    restart: "no"
+
+  # n8n Automation Workflows
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: crediq-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=crediq2026
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      - N8N_LOG_LEVEL=info
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/.n8n/workflows
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # CredIQ Frontend (production build)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crediq-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+    driver: local
+  n8n_data:
+    driver: local
+
+networks:
+  default:
+    name: crediq-network
