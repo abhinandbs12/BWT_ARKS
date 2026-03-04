@@ -10,14 +10,14 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 import {
   signInWithEmail, signUpWithEmail, verifyEmailOTP,
-  checkUsernameAvailable, saveUser, getUser, isSupabaseConfigured,
+  checkUsernameAvailable, saveUser, getUser, getEmailByUsername, isSupabaseConfigured,
 } from '@/services/supabase'
 import { cleanDisplayName } from '@/utils/helpers'
 import toast from 'react-hot-toast'
 import type { User } from '@/types'
 
 const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
+  identifier: z.string().min(1, 'Enter your email or username'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
@@ -76,17 +76,28 @@ export default function LoginPage() {
   const handleSignIn = async (data: LoginForm) => {
     setIsLoading(true)
     try {
-      const uid = await signInWithEmail(data.email, data.password)
+      // Resolve identifier: if it contains '@' treat as email, otherwise look up by username
+      let email = data.identifier.trim()
+      if (!email.includes('@')) {
+        const found = await getEmailByUsername(email)
+        if (!found) {
+          loginForm.setError('identifier', { message: 'No account found with that username' })
+          setIsLoading(false)
+          return
+        }
+        email = found
+      }
+      const uid = await signInWithEmail(email, data.password)
       const profile = await getUser(uid)
       const user: User = {
         uid,
-        email: data.email,
-        name: (profile?.name as string) || cleanDisplayName(data.email),
+        email,
+        name: (profile?.name as string) || cleanDisplayName(email),
         username: profile?.username as string | undefined,
         createdAt: new Date(),
         lastLogin: new Date(),
       }
-      await saveUser(uid, { email: data.email, last_login: new Date().toISOString() })
+      await saveUser(uid, { email, last_login: new Date().toISOString() })
       setUser(user)
       toast.success(`Welcome back, ${user.name}!`)
       navigate('/dashboard')
@@ -139,7 +150,7 @@ export default function LoginPage() {
       if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
         toast.error('Email already registered. Please sign in instead.')
         setMode('signin')
-        loginForm.setValue('email', data.email)
+        loginForm.setValue('identifier', data.email)
       } else {
         toast.error(msg)
       }
@@ -319,14 +330,14 @@ export default function LoginPage() {
               {mode === 'signin' ? (
                 <form onSubmit={loginForm.handleSubmit(handleSignIn)} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-dark mb-1.5">Email Address</label>
+                    <label className="block text-sm font-medium text-neutral-dark mb-1.5">Email or Username</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-gray" />
-                      <input {...loginForm.register('email')} type="email" placeholder="you@example.com"
-                        autoComplete="email" autoFocus
-                        className={`input pl-10 ${loginForm.formState.errors.email ? 'input-error' : ''}`} />
+                      <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-gray" />
+                      <input {...loginForm.register('identifier')} type="text" placeholder="you@example.com or abhinand"
+                        autoComplete="username" autoFocus
+                        className={`input pl-10 ${loginForm.formState.errors.identifier ? 'input-error' : ''}`} />
                     </div>
-                    {loginForm.formState.errors.email && <p className="text-xs text-danger mt-1">{loginForm.formState.errors.email.message}</p>}
+                    {loginForm.formState.errors.identifier && <p className="text-xs text-danger mt-1">{loginForm.formState.errors.identifier.message}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-dark mb-1.5">Password</label>

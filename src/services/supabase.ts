@@ -313,6 +313,21 @@ export async function getUser(uid: string): Promise<Record<string, unknown> | nu
   }
 }
 
+/** Look up a user's email by their username. Returns null if not found. */
+export async function getEmailByUsername(username: string): Promise<string | null> {
+  if (!supabase) return null
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('email')
+      .eq('username', username.toLowerCase())
+      .maybeSingle()
+    return (data?.email as string) ?? null
+  } catch {
+    return null
+  }
+}
+
 // ─── CredScore DB helpers ─────────────────────────────────────────────────
 
 export async function saveCredScore(uid: string, scoreData: Record<string, unknown>): Promise<void> {
