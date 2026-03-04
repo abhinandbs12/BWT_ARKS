@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nreturn [{\n  json: {\n    notification: `🏦 New Loan Application — CredIQ\\nProduct: ${data.loanType}\\nProvider: ${data.provider}\\nAmount: ₹${Number(data.amount).toLocaleString('en-IN')}\\nCredScore: ${data.score}/850\\nTime: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,\n    ...data\n  }\n}];"
+        "jsCode": "const data = $input.first().json.body || $input.first().json;\nreturn [{\n  json: {\n    notification: `🏦 New Loan Application — CredIQ\\nProduct: ${data.loanType}\\nProvider: ${data.provider}\\nAmount: ₹${Number(data.amount).toLocaleString('en-IN')}\\nCredScore: ${data.score}/850\\nTime: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,\n    ...data\n  }\n}];"
       },
       "id": "e5f6a7b8-c9d0-1234-efab-555555555555",
       "name": "Format Loan Notification",

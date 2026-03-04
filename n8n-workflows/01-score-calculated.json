@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst score = data.score;\nconst tier = data.tier;\nconst phone = data.phone;\n\nlet emoji = '📊';\nif (score >= 750) emoji = '🌟';\nelse if (score >= 650) emoji = '✅';\nelse if (score >= 550) emoji = '⚠️';\nelse emoji = '🔴';\n\nreturn [{\n  json: {\n    message: `${emoji} CredIQ Score Update\\nScore: ${score}/850 (${tier})\\nPhone: ${phone}\\nCalculated at: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,\n    score,\n    tier,\n    phone,\n    emoji\n  }\n}];"
+        "jsCode": "const data = $input.first().json.body || $input.first().json;\nconst score = data.score;\nconst tier = data.tier;\nconst phone = data.phone;\n\nlet emoji = '📊';\nif (score >= 750) emoji = '🌟';\nelse if (score >= 650) emoji = '✅';\nelse if (score >= 550) emoji = '⚠️';\nelse emoji = '🔴';\n\nreturn [{\n  json: {\n    message: `${emoji} CredIQ Score Update\\nScore: ${score}/850 (${tier})\\nPhone: ${phone}\\nCalculated at: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`,\n    score,\n    tier,\n    phone,\n    emoji\n  }\n}];"
       },
       "id": "c2b3d4e5-f6a7-8901-bcde-f12345678901",
       "name": "Format Score Message",

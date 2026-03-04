@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst level = data.riskLevel?.toUpperCase() || 'HIGH';\nconst input = data.input;\nconst scamType = data.scamType || 'Unknown';\nconst score = data.riskScore || 0;\n\nreturn [{\n  json: {\n    alert: `🚨 SCAM ALERT — CredIQ ScamShield\\nNumber: ${input}\\nRisk Level: ${level} (${score}/100)\\nType: ${scamType}\\nTime: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\\n\\n⛔ Do NOT answer. Report to cybercrime.gov.in`,\n    input,\n    riskLevel: level,\n    riskScore: score,\n    scamType\n  }\n}];"
+        "jsCode": "const data = $input.first().json.body || $input.first().json;\nconst level = data.riskLevel?.toUpperCase() || 'HIGH';\nconst input = data.input;\nconst scamType = data.scamType || 'Unknown';\nconst score = data.riskScore || 0;\n\nreturn [{\n  json: {\n    alert: `🚨 SCAM ALERT — CredIQ ScamShield\\nNumber: ${input}\\nRisk Level: ${level} (${score}/100)\\nType: ${scamType}\\nTime: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\\n\\n⛔ Do NOT answer. Report to cybercrime.gov.in`,\n    input,\n    riskLevel: level,\n    riskScore: score,\n    scamType\n  }\n}];"
       },
       "id": "b2c3d4e5-f6a7-8901-bcde-222222222222",
       "name": "Format Scam Alert",

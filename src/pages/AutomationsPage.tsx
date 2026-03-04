@@ -62,7 +62,7 @@ export default function AutomationsPage() {
   const handleTest = async (type: AutomationEventType) => {
     setTesting(type)
     const payload: Record<string, unknown> =
-      type === 'score_calculated' ? { score: credScore?.score || 720, tier: credScore?.tier || 'Good', phone: user?.phone || '+91XXXXXXXXXX' }
+      type === 'score_calculated' ? { score: credScore?.score || 720, tier: credScore?.tier || 'Good', phone: user?.phone || user?.email || '+916238046005' }
       : type === 'scam_detected'  ? { input: '+91 9876543210', riskLevel: 'critical', riskScore: 98, scamType: 'fake_bank_call' }
       : type === 'loan_applied'   ? { loanType: 'Microloan', provider: 'Stashfin NBFC', amount: 25000, score: credScore?.score || 720 }
       : type === 'csv_uploaded'   ? { txCount: 180, monthsCovered: 6 }
