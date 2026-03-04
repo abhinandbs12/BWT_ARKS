@@ -80,7 +80,7 @@ export default function DashboardPage() {
       clearTimeout(hardTimeout)
       toast.success(`CredScore: ${score.score} (${score.tier})`, { id: toastId })
       // Fire n8n automation (non-blocking, safe)
-      triggerScoreCalculated(score.score, score.tier, user?.phone || 'unknown').catch(() => {})
+      triggerScoreCalculated(score.score, score.tier, user?.phone || user?.email || '+916238046005').catch(() => {})
     } catch (err) {
       clearTimeout(hardTimeout)
       console.error('Score calculation error:', err)

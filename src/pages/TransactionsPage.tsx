@@ -3,6 +3,7 @@ import { Upload, FileText, X, Bot, Filter, Search, Download } from 'lucide-react
 import { useAppStore } from '@/store/useAppStore'
 import { parseUPICSV, parseUPIPDF, generateMockTransactions } from '@/services/upiParser'
 import { buildDashboardStats } from '@/utils/credScore'
+import { triggerCSVUploaded } from '@/services/n8n'
 import { formatCurrency, formatDate } from '@/utils/helpers'
 import TransactionItem from '@/components/ui/TransactionItem'
 import toast from 'react-hot-toast'
@@ -53,6 +54,8 @@ export default function TransactionsPage() {
       setDashboardStats(stats)
       toast.success(`Loaded ${parsed.length} transactions from ${isPDF ? 'PDF' : 'CSV'}!`, { id: toastId })
       setPage(1)
+      // Fire n8n automation (non-blocking)
+      triggerCSVUploaded(parsed.length, Math.round(parsed.length / 30)).catch(() => {})
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Parse error'
       toast.error(msg, { id: toastId })

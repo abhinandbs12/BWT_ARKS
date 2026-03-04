@@ -27,14 +27,28 @@
     },
     {
       "parameters": {
+        "from": "+14155238886",
+        "to": "+916238046005",
+        "toWhatsapp": true,
+        "body": "={{ $json.notification }}"
+      },
+      "id": "a1b2c3d4-loan-twil-io00-000000000001",
+      "name": "WhatsApp: Loan Alert",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": { "twilioApi": { "name": "Twilio account" } }
+    },
+    {
+      "parameters": {
         "respondWith": "json",
-        "responseBody": "={ \"status\": \"application_received\" }"
+        "responseBody": "{ \"status\": \"application_received\" }"
       },
       "id": "f6a7b8c9-d0e1-2345-fabc-666666666666",
       "name": "Respond to CredIQ",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [680, 300]
+      "position": [900, 300]
     }
   ],
   "connections": {
@@ -42,6 +56,9 @@
       "main": [[{ "node": "Format Loan Notification", "type": "main", "index": 0 }]]
     },
     "Format Loan Notification": {
+      "main": [[{ "node": "WhatsApp: Loan Alert", "type": "main", "index": 0 }]]
+    },
+    "WhatsApp: Loan Alert": {
       "main": [[{ "node": "Respond to CredIQ", "type": "main", "index": 0 }]]
     }
   },
