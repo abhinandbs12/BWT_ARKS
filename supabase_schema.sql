@@ -15,21 +15,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
--- Allow users to read their own row (UUID comparison, not text)
 CREATE POLICY "Users can read own row"
-  ON users FOR SELECT
-  USING (id = auth.uid());
-
--- Allow authenticated users to insert their own row
+  ON users FOR SELECT USING (id = auth.uid()::text);
 CREATE POLICY "Users can insert own row"
-  ON users FOR INSERT
-  WITH CHECK (id = auth.uid());
-
--- Allow authenticated users to update their own row
+  ON users FOR INSERT WITH CHECK (id = auth.uid()::text);
 CREATE POLICY "Users can update own row"
   ON users FOR UPDATE
-  USING (id = auth.uid())
-  WITH CHECK (id = auth.uid());
+  USING (id = auth.uid()::text)
+  WITH CHECK (id = auth.uid()::text);
 
 -- ── CredScores ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS cred_scores (
