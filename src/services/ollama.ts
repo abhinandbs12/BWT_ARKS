@@ -7,7 +7,7 @@ const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:14b'
 
 const ollamaClient = axios.create({
   baseURL: OLLAMA_BASE,
-  timeout: 60_000, // 60s — if it takes longer, fallback kicks in
+  timeout: 25_000, // 25s — fast enough for 7B, fallback kicks in for 14B if slow
   headers: { 'Content-Type': 'application/json' },
 })
 

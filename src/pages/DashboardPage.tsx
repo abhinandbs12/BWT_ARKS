@@ -64,11 +64,12 @@ export default function DashboardPage() {
       return
     }
     setCalculating(true)
-    const toastId = toast.loading(
-      ollamaConnected
-        ? '🤖 AI analyzing transactions… (up to 60s)'
-        : '📊 Analyzing with smart fallback…',
-    )
+    const toastId = toast.loading('Analyzing transactions…')
+    // Hard 35s timeout — guarantees the button always un-sticks
+    const hardTimeout = setTimeout(() => {
+      setCalculating(false)
+      toast.error('Analysis timed out. Using offline fallback.', { id: toastId })
+    }, 35_000)
     try {
       const aiResult = await analyzeTransactions(transactions)
       const score = calculateCredScore(transactions, aiResult)
@@ -76,12 +77,16 @@ export default function DashboardPage() {
       setImprovements(generateImprovements(score.score))
       const stats = buildDashboardStats(transactions)
       setDashboardStats(stats)
-      toast.success(`CredScore calculated: ${score.score} (${score.tier})`, { id: toastId })
-      // Fire n8n automation (non-blocking)
-      triggerScoreCalculated(score.score, score.tier, user?.phone || 'unknown')
-    } catch {
+      clearTimeout(hardTimeout)
+      toast.success(`CredScore: ${score.score} (${score.tier})`, { id: toastId })
+      // Fire n8n automation (non-blocking, safe)
+      triggerScoreCalculated(score.score, score.tier, user?.phone || 'unknown').catch(() => {})
+    } catch (err) {
+      clearTimeout(hardTimeout)
+      console.error('Score calculation error:', err)
       toast.error('Analysis failed. Please retry.', { id: toastId })
     } finally {
+      clearTimeout(hardTimeout)
       setCalculating(false)
     }
   }

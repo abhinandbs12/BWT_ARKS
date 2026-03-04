@@ -306,7 +306,8 @@ export async function saveUser(uid: string, data: Record<string, unknown>): Prom
 export async function getUser(uid: string): Promise<Record<string, unknown> | null> {
   if (!supabase) return null
   try {
-    const { data } = await supabase.from('users').select('*').eq('id', uid).single()
+    // maybeSingle() returns null (not 406) when no row found
+    const { data } = await supabase.from('users').select('*').eq('id', uid).maybeSingle()
     return data
   } catch {
     return null
