@@ -149,7 +149,7 @@ export default function CredScorePage() {
   const handleRecalculate = async () => {
     if (!transactions.length) return toast.error('No transactions loaded.')
     setCalculating(true)
-    const toastId = toast.loading('Recalculating with Qwen2.5-Coder:7B…')
+    const toastId = toast.loading('Recalculating with Qwen2.5-Coder:14B…')
     try {
       const ai = await analyzeTransactions(transactions)
       const score = calculateCredScore(transactions, ai)
@@ -184,6 +184,8 @@ export default function CredScorePage() {
   const completedImprovements = improvements.filter((i) => i.completed).length
   const totalPoints = improvements.reduce((s, i) => s + i.pointsGain, 0)
   const earnedPoints = improvements.filter((i) => i.completed).reduce((s, i) => s + i.pointsGain, 0)
+  const remainingPoints = totalPoints - earnedPoints
+  const projectedScore = Math.min(850, score + earnedPoints)
 
   const COMPONENT_DESCRIPTIONS: Record<string, string> = {
     incomeConsistency: 'Regularity and predictability of your income sources',
@@ -207,9 +209,21 @@ export default function CredScorePage() {
       {/* Header card */}
       <div className="card bg-score-gradient text-white">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <ScoreGauge score={score} size="lg" />
+          <div className="relative">
+            <ScoreGauge score={projectedScore} size="lg" />
+            {earnedPoints > 0 && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-success text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                +{earnedPoints} projected
+              </div>
+            )}
+          </div>
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-3xl font-bold">{score} — {tier}</h1>
+            <h1 className="text-3xl font-bold">
+              {projectedScore} — {tier}
+              {earnedPoints > 0 && (
+                <span className="ml-2 text-lg text-blue-200 font-normal">(was {score})</span>
+              )}
+            </h1>
             <p className="text-blue-200 mt-1">
               Last updated: {new Date(credScore.calculatedAt).toLocaleString('en-IN')}
             </p>
@@ -248,7 +262,7 @@ export default function CredScorePage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-neutral-dark">Qwen2.5-Coder:7B Analysis Summary</h3>
+              <h3 className="font-semibold text-neutral-dark">Qwen2.5-Coder:14B Analysis Summary</h3>
               <span className="badge-ai">AI</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
@@ -413,12 +427,25 @@ export default function CredScorePage() {
       {improvements.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-neutral-dark">
-              Your Path to {Math.min(850, score + totalPoints)}+ Score
-            </h3>
-            <span className="text-sm text-neutral-gray">
-              {completedImprovements}/{improvements.length} done
-            </span>
+            <div>
+              <h3 className="font-semibold text-neutral-dark">
+                Your Path to {Math.min(850, score + totalPoints)}+ Score
+              </h3>
+              {earnedPoints > 0 && (
+                <p className="text-xs text-success mt-0.5 font-medium">
+                  ✓ Projected score: <span className="font-mono font-bold">{projectedScore}</span>
+                  {' '}(+{earnedPoints} pts applied)
+                </p>
+              )}
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-medium text-neutral-dark">
+                {completedImprovements}/{improvements.length} done
+              </span>
+              {remainingPoints > 0 && (
+                <p className="text-xs text-neutral-gray mt-0.5">+{remainingPoints} pts remaining</p>
+              )}
+            </div>
           </div>
 
           <ProgressBar

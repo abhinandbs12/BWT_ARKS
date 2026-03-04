@@ -143,7 +143,7 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             {[
-              { icon: Bot, text: 'Powered by Qwen2.5-Coder:7B running locally' },
+              { icon: Bot, text: 'Powered by Qwen2.5-Coder:14B running locally' },
               { icon: Shield, text: 'Zero data sent to cloud — complete privacy' },
               { icon: Zap, text: 'Credit score in &lt;30 seconds from UPI history' },
             ].map(({ icon: Icon, text }) => (

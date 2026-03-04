@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, TrendingDown, IndianRupee, ShieldCheck,
@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts'
 import { useAppStore } from '@/store/useAppStore'
-import { generateMockTransactions } from '@/services/upiParser'
+import { generateMockTransactions, parseUPICSV, parseUPIPDF } from '@/services/upiParser'
 import { analyzeTransactions } from '@/services/ollama'
 import { triggerScoreCalculated } from '@/services/n8n'
 import { calculateCredScore, buildDashboardStats, generateImprovements } from '@/utils/credScore'
@@ -26,7 +26,25 @@ export default function DashboardPage() {
     setImprovements, ollamaConnected, user,
   } = useAppStore()
   const navigate = useNavigate()
+  const fileRef = useRef<HTMLInputElement>(null)
   const [statsLoading, setStatsLoading] = useState(!dashboardStats)
+
+  const handleUploadFile = async (file: File) => {
+    const isPDF = file.name.toLowerCase().endsWith('.pdf')
+    const isCSV = file.name.toLowerCase().endsWith('.csv')
+    if (!isPDF && !isCSV) { toast.error('Please upload a CSV or PDF file.'); return }
+    const toastId = toast.loading(`Parsing ${isPDF ? 'PDF' : 'CSV'} transactions…`)
+    try {
+      const parsed = isPDF
+        ? await parseUPIPDF(await file.arrayBuffer())
+        : parseUPICSV(await file.text())
+      setTransactions(parsed)
+      setDashboardStats(buildDashboardStats(parsed))
+      toast.success(`Loaded ${parsed.length} transactions!`, { id: toastId })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Parse error', { id: toastId })
+    }
+  }
 
   // Load mock data on first visit
   useEffect(() => {
@@ -49,7 +67,7 @@ export default function DashboardPage() {
     setCalculating(true)
     const toastId = toast.loading(
       ollamaConnected
-        ? '🤖 Qwen2.5-Coder:7B analyzing your transactions…'
+        ? '🤖 Qwen2.5-Coder:14B analyzing your transactions…'
         : '📊 Analyzing with smart fallback (Ollama offline)…',
     )
     try {
@@ -70,7 +88,9 @@ export default function DashboardPage() {
   }
 
   const stats = dashboardStats
-  const recentTx = transactions.slice(0, 5)
+  const recentTx = [...transactions]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
 
   return (
     <div className="space-y-6">
@@ -87,8 +107,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,.pdf"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleUploadFile(e.target.files[0])}
+          />
           <button
-            onClick={() => navigate('/transactions')}
+            onClick={() => fileRef.current?.click()}
             className="btn-secondary btn-sm flex items-center gap-2"
           >
             <Upload className="w-4 h-4" />

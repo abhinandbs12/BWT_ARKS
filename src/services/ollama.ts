@@ -1,9 +1,9 @@
 import axios from 'axios'
 import type { OllamaRequest, OllamaResponse, UPITransaction, AIAnalysisResult } from '@/types'
 
-// Ollama base URL — uses 7B model (user's setup)
+// Ollama base URL — uses 14B model (user's setup)
 const OLLAMA_BASE = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434'
-const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:7b'
+const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:14b'
 
 const ollamaClient = axios.create({
   baseURL: OLLAMA_BASE,
@@ -30,7 +30,7 @@ async function generate(prompt: string, maxTokens = 2048): Promise<string> {
     stream: false,
     options: {
       temperature: 0.1,       // deterministic for financial data
-      num_ctx: 8192,          // 7B context (vs 32K for 14B — still handles 3 months)
+      num_ctx: 32000,         // 14B context window — handles 6 months of transactions
       top_p: 0.9,
       num_predict: maxTokens,
     },

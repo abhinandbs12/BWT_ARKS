@@ -55,12 +55,21 @@ const MOCK_SCAM_DB = [
   },
 ]
 
+interface ReportForm {
+  phone: string
+  scamType: string
+  description: string
+}
+
 export default function ScamShieldPage() {
   const { scamsBlocked, incrementScamsBlocked, ollamaConnected } = useAppStore()
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { register, handleSubmit, watch, formState: { errors } } = useForm<CheckForm>()
+  const reportForm = useForm<ReportForm>()
   const inputValue = watch('input') || ''
 
   const handleCheck = async (data: CheckForm) => {
@@ -109,6 +118,15 @@ export default function ScamShieldPage() {
     }
   }
 
+  const handleReport = async (data: ReportForm) => {
+    setIsSubmitting(true)
+    await new Promise((r) => setTimeout(r, 900))
+    setIsSubmitting(false)
+    setShowReportModal(false)
+    reportForm.reset()
+    toast.success('✅ Report submitted! Thank you for protecting the community.')
+  }
+
   const riskBg = {
     low: 'bg-success-light border-success',
     medium: 'bg-warning-light border-warning',
@@ -143,7 +161,7 @@ export default function ScamShieldPage() {
         <h2 className="font-bold text-neutral-dark text-lg mb-1">Check Phone / UPI ID for Scams</h2>
         <p className="text-sm text-neutral-gray mb-5">
           Enter a phone number or UPI ID to check against 20M+ reported scammers.
-          AI-powered by Qwen2.5-Coder:7B.
+          AI-powered by Qwen2.5-Coder:14B.
         </p>
 
         <form onSubmit={handleSubmit(handleCheck)} className="space-y-4">
@@ -284,13 +302,97 @@ export default function ScamShieldPage() {
             </p>
           </div>
           <button
-            onClick={() => toast.success('Report submitted! Thank you for protecting the community.')}
+            onClick={() => setShowReportModal(true)}
             className="btn-danger btn-sm shrink-0"
           >
             Report
           </button>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false) }}
+        >
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl animate-slide-up">
+            <div className="bg-warning px-6 py-4 flex items-center gap-3 rounded-t-xl">
+              <Flag className="w-6 h-6 text-white" />
+              <h2 className="text-lg font-bold text-white">Report a Scam</h2>
+            </div>
+            <form onSubmit={reportForm.handleSubmit(handleReport)} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-dark mb-1.5">
+                  Phone Number or UPI ID <span className="text-danger">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-gray" />
+                  <input
+                    {...reportForm.register('phone', { required: 'Required' })}
+                    type="text"
+                    placeholder="+91 98765 43210  or  name@upi"
+                    className={`input pl-10 ${reportForm.formState.errors.phone ? 'input-error' : ''}`}
+                  />
+                </div>
+                {reportForm.formState.errors.phone && (
+                  <p className="text-xs text-danger mt-1">{reportForm.formState.errors.phone.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-dark mb-1.5">
+                  Scam Type <span className="text-danger">*</span>
+                </label>
+                <select
+                  {...reportForm.register('scamType', { required: 'Required' })}
+                  className={`input ${reportForm.formState.errors.scamType ? 'input-error' : ''}`}
+                >
+                  <option value="">Select scam type…</option>
+                  <option value="fake_bank_call">Fake Bank Call (KYC / OTP theft)</option>
+                  <option value="upi_phishing">UPI Phishing / Fake payment request</option>
+                  <option value="investment_fraud">Investment Fraud (fake returns)</option>
+                  <option value="lottery_scam">Lottery / Prize Winner Scam</option>
+                  <option value="qr_scam">QR Code Scam</option>
+                  <option value="job_fraud">Fake Job / Work-from-home Fraud</option>
+                  <option value="other">Other</option>
+                </select>
+                {reportForm.formState.errors.scamType && (
+                  <p className="text-xs text-danger mt-1">{reportForm.formState.errors.scamType.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-dark mb-1.5">
+                  What happened? <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  {...reportForm.register('description', { required: 'Required', minLength: { value: 10, message: 'Please describe in at least 10 characters' } })}
+                  rows={3}
+                  placeholder="e.g. They called saying my UPI was blocked and asked for OTP…"
+                  className={`input h-auto py-3 resize-none ${reportForm.formState.errors.description ? 'input-error' : ''}`}
+                />
+                {reportForm.formState.errors.description && (
+                  <p className="text-xs text-danger mt-1">{reportForm.formState.errors.description.message}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="submit" disabled={isSubmitting} className="btn-danger flex-1">
+                  {isSubmitting ? 'Submitting…' : '🚨 Submit Report'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowReportModal(false); reportForm.reset() }}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Scam Alert Modal */}
       {showModal && scanResult && (
