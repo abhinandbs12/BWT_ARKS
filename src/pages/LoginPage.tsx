@@ -112,7 +112,7 @@ export default function LoginPage() {
       setPendingName(data.name.trim())
       setPendingUsername(data.username.toLowerCase().trim())
       setMode('verify_otp')
-      toast.success('Check your email â€” we sent you a 6-digit code!')
+      toast.success('Check your email - we sent you a 6-digit code!')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign up failed'
       if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
@@ -189,7 +189,7 @@ export default function LoginPage() {
           <div className="space-y-4">
             {[
               { icon: Bot,    text: 'Powered by Qwen2.5-Coder:14B running locally' },
-              { icon: Shield, text: 'Zero data sent to cloud â€” complete privacy' },
+              { icon: Shield, text: 'Zero data sent to cloud - complete privacy' },
               { icon: Zap,    text: 'Credit score in <30 seconds from UPI history' },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3 text-blue-100">
@@ -201,7 +201,7 @@ export default function LoginPage() {
         </div>
         <div className="flex items-center gap-2 text-blue-200 text-sm">
           <Lock className="w-4 h-4" />
-          <span>Team ARKS Â· BWT Hackathon 2026 Â· Future Finance Innovation</span>
+          <span>Team ARKS | BWT Hackathon 2026 | Future Finance Innovation</span>
         </div>
       </div>
 
@@ -250,7 +250,7 @@ export default function LoginPage() {
                 </div>
                 <button type="submit" disabled={isLoading} className="btn-primary w-full">
                   {isLoading
-                    ? <span className="flex items-center justify-center gap-2"><Spinner /> Verifyingâ€¦</span>
+                    ? <span className="flex items-center justify-center gap-2"><Spinner /> Verifying...</span>
                     : <span className="flex items-center justify-center gap-2">Verify & Enter CredIQ <ArrowRight className="w-4 h-4" /></span>
                   }
                 </button>
@@ -261,7 +261,7 @@ export default function LoginPage() {
               </form>
               <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
                 <p className="text-xs text-amber-700 text-center">
-                  ðŸ’¡ Check your spam folder if you don't see the email. The code expires in 10 minutes.
+                  Check your spam folder if you don't see the email. The code expires in 10 minutes.
                 </p>
               </div>
             </>
@@ -290,7 +290,7 @@ export default function LoginPage() {
 
               {!isSupabaseConfigured && (
                 <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/30 text-xs text-warning font-medium">
-                  âš ï¸ Demo mode â€” use <strong>demo@crediq.in</strong> / <strong>demo123</strong>
+                  Demo mode - use <strong>demo@crediq.in</strong> / <strong>demo123</strong>
                 </div>
               )}
 
@@ -312,7 +312,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-gray" />
                       <input {...loginForm.register('password')} type={showPw ? 'text' : 'password'}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete="current-password"
+                        placeholder="Password" autoComplete="current-password"
                         className={`input pl-10 pr-10 ${loginForm.formState.errors.password ? 'input-error' : ''}`} />
                       <button type="button" onClick={() => setShowPw((v) => !v)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-gray hover:text-neutral-dark">
@@ -323,7 +323,7 @@ export default function LoginPage() {
                   </div>
                   <button type="submit" disabled={isLoading} className="btn-primary w-full mt-2">
                     {isLoading
-                      ? <span className="flex items-center justify-center gap-2"><Spinner /> Signing inâ€¦</span>
+                      ? <span className="flex items-center justify-center gap-2"><Spinner /> Signing in...</span>
                       : <span className="flex items-center justify-center gap-2">Sign In <ArrowRight className="w-4 h-4" /></span>
                     }
                   </button>
@@ -370,7 +370,7 @@ export default function LoginPage() {
                       </span>
                     </div>
                     {usernameStatus === 'available' && !signupForm.formState.errors.username
-                      ? <p className="text-xs text-success mt-1">âœ“ Username is available</p>
+                      ? <p className="text-xs text-success mt-1">Username is available</p>
                       : signupForm.formState.errors.username && <p className="text-xs text-danger mt-1">{signupForm.formState.errors.username.message}</p>
                     }
                   </div>
@@ -421,7 +421,7 @@ export default function LoginPage() {
 
                   <button type="submit" disabled={isLoading || usernameStatus === 'taken'} className="btn-primary w-full mt-2">
                     {isLoading
-                      ? <span className="flex items-center justify-center gap-2"><Spinner /> Creating accountâ€¦</span>
+                      ? <span className="flex items-center justify-center gap-2"><Spinner /> Creating account...</span>
                       : <span className="flex items-center justify-center gap-2">Create Account <ArrowRight className="w-4 h-4" /></span>
                     }
                   </button>
@@ -436,7 +436,7 @@ export default function LoginPage() {
 
           <div className="mt-6 p-3 rounded-lg bg-primary-light border border-primary/20">
             <p className="text-xs text-primary-dark text-center">
-              ðŸ”’ Your financial data never leaves your device. Processed by local AI only.
+              Your financial data never leaves your device. Processed by local AI only.
             </p>
           </div>
         </div>
