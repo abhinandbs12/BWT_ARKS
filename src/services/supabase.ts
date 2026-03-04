@@ -228,13 +228,30 @@ export async function verifyPhoneOTP(phoneE164: string, otp: string): Promise<st
 
 // ── Email + Password Auth (primary) ───────────────────────────────
 
-/** Sign up with email + password. Returns the user's UID. */
-export async function signUpWithEmail(email: string, password: string): Promise<string> {
+/** Sign up with email + password + profile metadata. Returns the user's UID.
+ *  Supabase will send a confirmation email — verify with verifyEmailOTP(). */
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  metadata?: { name?: string; username?: string },
+): Promise<string> {
   if (!supabase) throw new Error('Supabase not configured')
-  const { data, error } = await supabase.auth.signUp({ email, password })
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: metadata ?? {} },
+  })
   if (error) throw error
   if (!data.user) throw new Error('Sign up failed — no user returned')
   return data.user.id
+}
+
+/** Verify the 6-digit OTP sent to the email after signUp. Returns UID. */
+export async function verifyEmailOTP(email: string, token: string): Promise<string> {
+  if (!supabase) throw new Error('Supabase not configured')
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' })
+  if (error) throw error
+  return data.user?.id ?? ''
 }
 
 /** Sign in with email + password. Returns the user's UID. */
@@ -247,6 +264,21 @@ export async function signInWithEmail(email: string, password: string): Promise<
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
   return data.user.id
+}
+
+/** Check whether a username is available (returns true = available). */
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  if (!supabase) return true
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username.toLowerCase().trim())
+      .maybeSingle()
+    return !data
+  } catch {
+    return true
+  }
 }
 
 /** Sign out the current session. */

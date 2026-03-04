@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT UNIQUE,
   phone         TEXT UNIQUE,
   name          TEXT,
+  username      TEXT UNIQUE,
   last_login    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW(),
   created_at    TIMESTAMPTZ DEFAULT NOW()

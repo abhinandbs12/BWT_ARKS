@@ -4,6 +4,7 @@ export interface User {
   phone?: string       // optional — only set when using phone auth
   email?: string       // set when using email/password auth
   name?: string
+  username?: string
   avatar?: string
   createdAt: Date
   lastLogin: Date

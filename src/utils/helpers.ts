@@ -6,6 +6,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Strip digits and trailing consonant-only initials from an email prefix or stored name.
+// e.g. "abhinandbs12" → "Abhinand", "karthikrn5" → "Karthik", "Abhinand" → "Abhinand"
+export function cleanDisplayName(raw: string): string {
+  // If already a clean name (no digits), just capitalise
+  if (!/\d/.test(raw)) {
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()
+  }
+  const s = raw.replace(/\d+/g, '').toLowerCase()
+  // Strip trailing 2-char consonant-only suffix (initials like "bs", "rn", "jv")
+  const last2 = s.slice(-2)
+  const cleaned = /^[^aeiou]{2}$/i.test(last2) && s.length >= 6 ? s.slice(0, -2) : s
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+}
+
+// Extract a clean first name from an email address.
+export function extractDisplayName(email: string): string {
+  return cleanDisplayName(email.split('@')[0])
+}
+
 export function formatCurrency(amount: number, compact = false): string {
   if (compact) {
     if (amount >= 10_000_000) return `₹${(amount / 10_000_000).toFixed(1)}Cr`

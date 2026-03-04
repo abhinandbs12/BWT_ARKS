@@ -13,7 +13,7 @@ import { generateMockTransactions, parseUPICSV, parseUPIPDF } from '@/services/u
 import { analyzeTransactions } from '@/services/ollama'
 import { triggerScoreCalculated } from '@/services/n8n'
 import { calculateCredScore, buildDashboardStats, generateImprovements } from '@/utils/credScore'
-import { formatCurrency } from '@/utils/helpers'
+import { formatCurrency, cleanDisplayName } from '@/utils/helpers'
 import ScoreGauge from '@/components/ui/ScoreGauge'
 import MetricCard from '@/components/ui/MetricCard'
 import TransactionItem from '@/components/ui/TransactionItem'
@@ -97,7 +97,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-neutral-dark">
-            Welcome back, {user?.name?.split(' ')[0] || 'there'} 👋
+            Welcome back, {user?.name ? cleanDisplayName(user.name) : 'there'} 👋
           </h2>
           <p className="text-sm text-neutral-gray mt-0.5">
             {transactions.length} transactions loaded ·{' '}
