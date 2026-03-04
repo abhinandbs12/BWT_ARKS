@@ -1,19 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Workflow, Zap, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  RefreshCw, ExternalLink, Download, ChevronRight, Circle,
+  RefreshCw, ExternalLink, ChevronRight, Circle,
 } from 'lucide-react'
 import {
   checkN8nHealth,
   getEventLog,
   WORKFLOW_WEBHOOKS,
-  triggerAutomation,
   type AutomationEvent,
   type AutomationEventType,
 } from '@/services/n8n'
 import { useAppStore } from '@/store/useAppStore'
 import { formatDate } from '@/utils/helpers'
-import toast from 'react-hot-toast'
 
 const STATUS_COLORS: Record<AutomationEvent['status'], string> = {
   success: 'text-success bg-success-light',
@@ -34,13 +32,14 @@ const WORKFLOW_DOCS: Partial<Record<AutomationEventType, string[]>> = {
   scam_detected:   ['Send SMS alert to user immediately', 'Post warning to a team WhatsApp/Slack group', 'Save the scam report to a spreadsheet'],
   loan_applied:    ['Send loan details to the lending partner', 'Send a confirmation email to the user', 'Save the application in a Google Sheet'],
   csv_uploaded:    ['Re-calculate the score automatically', 'Save the uploaded file to Google Drive', 'Notify the admin that new data is available'],
+  suspicious_transaction: ['Block the transaction via bank API', 'Send an SMS alert immediately', 'Log in fraud detection spreadsheet'],
+  score_improved:  ['Send a congratulations WhatsApp message', 'Unlock better loan offers automatically', 'Update user tier badge in the dashboard'],
 }
 
 export default function AutomationsPage() {
   const { credScore, user } = useAppStore()
   const [n8nOnline, setN8nOnline] = useState<boolean | null>(null)
   const [events, setEvents] = useState<AutomationEvent[]>([])
-  const [testing, setTesting] = useState<AutomationEventType | null>(null)
   const [checkingHealth, setCheckingHealth] = useState(false)
 
   const refreshLog = useCallback(() => setEvents(getEventLog()), [])
@@ -58,24 +57,6 @@ export default function AutomationsPage() {
     const interval = setInterval(refreshLog, 3000)
     return () => clearInterval(interval)
   }, [checkHealth, refreshLog])
-
-  const handleTest = async (type: AutomationEventType) => {
-    setTesting(type)
-    const payload: Record<string, unknown> =
-      type === 'score_calculated' ? { score: credScore?.score || 720, tier: credScore?.tier || 'Good', phone: user?.phone || user?.email || '+916238046005' }
-      : type === 'scam_detected'  ? { input: '+91 9876543210', riskLevel: 'critical', riskScore: 98, scamType: 'fake_bank_call' }
-      : type === 'loan_applied'   ? { loanType: 'Microloan', provider: 'Stashfin NBFC', amount: 25000, score: credScore?.score || 720 }
-      : type === 'csv_uploaded'   ? { txCount: 180, monthsCovered: 6 }
-      : { test: true }
-
-    const evt = await triggerAutomation(type, payload)
-    refreshLog()
-    setTesting(null)
-
-    if (evt.status === 'success') toast.success(`Workflow fired! (${evt.durationMs}ms)`)
-    else if (evt.status === 'offline') toast('n8n offline — event logged locally', { icon: '📋' })
-    else toast.error(`Webhook failed — is n8n running?`)
-  }
 
   const totalSuccess = events.filter((e) => e.status === 'success').length
   const totalFired   = events.length
@@ -173,17 +154,10 @@ export default function AutomationsPage() {
                         <code className="text-xs text-neutral-gray font-mono">POST {wf.path}</code>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleTest(type)}
-                      disabled={testing === type}
-                      className="btn-primary py-1.5 px-3 text-xs"
-                    >
-                      {testing === type ? (
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        'Test Fire'
-                      )}
-                    </button>
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+                      Auto
+                    </span>
                   </div>
 
                   <p className="text-xs text-neutral-gray mb-3">{wf.description}</p>
