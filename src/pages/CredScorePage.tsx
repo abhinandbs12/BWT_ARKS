@@ -25,125 +25,356 @@ export default function CredScorePage() {
     if (!credScore) return
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const { score, tier, components, insights, loanEligibility, aiAnalysis } = credScore
-    const primaryColor: [number, number, number] = [59, 130, 246]
-    const darkColor: [number, number, number] = [17, 24, 39]
-    const grayColor: [number, number, number] = [107, 114, 128]
+
+    // ── Palette ──────────────────────────────────────────────────────────────
+    const C = {
+      primary:   [37, 99, 235]  as [number,number,number],
+      primaryLt: [219,234,254]  as [number,number,number],
+      success:   [22, 163, 74]  as [number,number,number],
+      successLt: [220,252,231]  as [number,number,number],
+      danger:    [220, 38, 38]  as [number,number,number],
+      dangerLt:  [254,226,226]  as [number,number,number],
+      warning:   [217,119,  6]  as [number,number,number],
+      warningLt: [254,243,199]  as [number,number,number],
+      dark:      [15,  23, 42]  as [number,number,number],
+      medium:    [71, 85,105]   as [number,number,number],
+      light:     [148,163,184]  as [number,number,number],
+      border:    [226,232,240]  as [number,number,number],
+      bg:        [248,250,252]  as [number,number,number],
+      white:     [255,255,255]  as [number,number,number],
+    }
     const pageW = 210
-    let y = 20
+    const pageH = 297
+    const margin = 14
 
-    // Header
-    doc.setFillColor(...primaryColor)
-    doc.rect(0, 0, pageW, 40, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(22)
-    doc.setFont('helvetica', 'bold')
-    doc.text('CredIQ Score Report', 20, 18)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 28)
-    doc.text(`Last calculated: ${new Date(credScore.calculatedAt).toLocaleString('en-IN')}`, 20, 35)
-    y = 52
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const sectionTitle = (text: string, y: number) => {
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...C.dark)
+      doc.text(text.toUpperCase(), margin, y)
+      doc.setDrawColor(...C.primary)
+      doc.setLineWidth(0.6)
+      doc.line(margin, y + 1.5, pageW - margin, y + 1.5)
+      return y + 8
+    }
+    const row2col = (label: string, value: string, y: number, valueColor = C.dark) => {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.light)
+      doc.text(label, margin + 4, y)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...valueColor)
+      doc.text(value, 115, y)
+      return y + 6.5
+    }
+    const scoreBar = (x: number, y: number, w: number, pct: number, color: [number,number,number]) => {
+      doc.setFillColor(...C.border)
+      doc.roundedRect(x, y, w, 3.5, 1, 1, 'F')
+      if (pct > 0) {
+        doc.setFillColor(...color)
+        doc.roundedRect(x, y, Math.max(1, (pct / 100) * w), 3.5, 1, 1, 'F')
+      }
+    }
+    const addPageFooter = (pageNum: number) => {
+      doc.setFillColor(...C.bg)
+      doc.rect(0, pageH - 12, pageW, 12, 'F')
+      doc.setDrawColor(...C.border)
+      doc.setLineWidth(0.3)
+      doc.line(0, pageH - 12, pageW, pageH - 12)
+      doc.setFontSize(7.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.light)
+      doc.text('CredIQ — AI-Powered Financial Identity  |  Team ARKS  |  BWT Hackathon 2026', margin, pageH - 5)
+      doc.text(`Page ${pageNum}`, pageW - margin - 8, pageH - 5)
+    }
 
-    // Score summary box
-    doc.setFillColor(239, 246, 255)
-    doc.roundedRect(15, y - 4, pageW - 30, 28, 3, 3, 'F')
-    doc.setTextColor(...darkColor)
-    doc.setFontSize(36)
+    // ═══════════════════════════════════════════════════════════════
+    //  PAGE 1
+    // ═══════════════════════════════════════════════════════════════
+
+    // ── Header banner ─────────────────────────────────────────────
+    doc.setFillColor(...C.primary)
+    doc.rect(0, 0, pageW, 44, 'F')
+    // Decorative circles
+    doc.setFillColor(255, 255, 255, 0.06)
+    doc.circle(pageW - 18, 8, 22, 'F')
+    doc.circle(pageW - 6, 38, 14, 'F')
+
+    doc.setTextColor(...C.white)
+    doc.setFontSize(20)
     doc.setFont('helvetica', 'bold')
-    doc.text(String(score), 25, y + 16)
-    doc.setFontSize(14)
+    doc.text('CredIQ Score Report', margin, 17)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...primaryColor)
-    doc.text(tier, 55, y + 10)
+    doc.setTextColor(186, 214, 254)
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, margin, 26)
+    doc.text(`Calculated: ${new Date(credScore.calculatedAt).toLocaleString('en-IN')}`, margin, 33)
+
+    let y = 54
+
+    // ── Score hero card ───────────────────────────────────────────
+    const tierColors: Record<string, [number, number, number]> = {
+      Excellent: C.success, Good: C.primary, Fair: C.warning, Poor: C.danger, 'Very Poor': C.danger,
+    }
+    const tierBg: Record<string, [number, number, number]> = {
+      Excellent: C.successLt, Good: C.primaryLt, Fair: C.warningLt, Poor: C.dangerLt, 'Very Poor': C.dangerLt,
+    }
+    const tColor = tierColors[tier] ?? C.primary
+    const tBg    = tierBg[tier]    ?? C.primaryLt
+
+    doc.setFillColor(...C.bg)
+    doc.roundedRect(margin, y, pageW - margin * 2, 34, 4, 4, 'F')
+    doc.setDrawColor(...C.border)
+    doc.setLineWidth(0.3)
+    doc.roundedRect(margin, y, pageW - margin * 2, 34, 4, 4, 'S')
+
+    // Big score number
+    doc.setFontSize(42)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...tColor)
+    doc.text(String(score), margin + 8, y + 24)
+
+    // Scale label under score
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...C.light)
+    doc.text('out of 850', margin + 8, y + 30)
+
+    // Vertical divider
+    doc.setDrawColor(...C.border)
+    doc.setLineWidth(0.3)
+    doc.line(margin + 50, y + 6, margin + 50, y + 28)
+
+    // Tier badge
+    doc.setFillColor(...tBg)
+    doc.roundedRect(margin + 56, y + 6, 34, 9, 2, 2, 'F')
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...tColor)
+    doc.text(tier, margin + 73, y + 12.5, { align: 'center' })
+
+    // Loan eligibility
     if (loanEligibility.eligible) {
-      doc.setFontSize(10)
-      doc.setTextColor(...grayColor)
-      doc.text(`Loan eligible up to ${formatCurrency(loanEligibility.maxAmount)} @ ${loanEligibility.interestRate}% p.a.`, 55, y + 19)
+      doc.setFontSize(8.5)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...C.dark)
+      doc.text('Loan Eligible', margin + 56, y + 22)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.medium)
+      doc.text(`Up to ${formatCurrency(loanEligibility.maxAmount)}  •  ${loanEligibility.interestRate}% p.a.`, margin + 56, y + 28)
+    } else {
+      doc.setFontSize(8.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.danger)
+      doc.text('Not eligible for loans currently', margin + 56, y + 22)
+    }
+
+    // Score range bar (300–850)
+    const barX = margin + 100
+    const barW = pageW - margin - barX - 2
+    const fillPct = ((score - 300) / 550) * 100
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...C.light)
+    doc.text('300', barX, y + 12)
+    doc.text('850', barX + barW - 2, y + 12, { align: 'right' })
+    scoreBar(barX, y + 14, barW, fillPct, tColor)
+    doc.setFontSize(7.5)
+    doc.setTextColor(...tColor)
+    doc.text(`${score}`, barX + Math.max(0, Math.min(barW - 8, (fillPct / 100) * barW - 4)), y + 22, { align: 'center' })
+
+    y += 44
+
+    // ── Score Components ──────────────────────────────────────────
+    y = sectionTitle('Score Components', y)
+    const compNames: Record<string, string> = {
+      incomeConsistency:  'Income Consistency',
+      paymentBehavior:    'Payment Behavior',
+      spendingIntelligence: 'Spending Intelligence',
+      savingsBehavior:    'Savings Behavior',
+      digitalFootprint:   'Digital Footprint',
+    }
+    Object.entries(components).forEach(([key, comp]) => {
+      const label = compNames[key] || key
+      const barColor = comp.score >= 70 ? C.success : comp.score >= 45 ? C.warning : C.danger
+      // Row background
+      doc.setFillColor(...C.bg)
+      doc.roundedRect(margin, y - 3, pageW - margin * 2, 13, 2, 2, 'F')
+      // Label
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...C.dark)
+      doc.text(label, margin + 4, y + 4)
+      // Weight tag
+      doc.setFontSize(7.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.light)
+      doc.text(`${comp.weight}% weight`, margin + 68, y + 4)
+      // Score number
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...barColor)
+      doc.text(`${comp.score}/100`, pageW - margin - 20, y + 4)
+      // Progress bar
+      scoreBar(margin + 4, y + 6.5, pageW - margin * 2 - 30, comp.score, barColor)
+      y += 16
+    })
+    y += 4
+
+    // ── AI Financial Snapshot ─────────────────────────────────────
+    y = sectionTitle('AI Financial Snapshot', y)
+    const snapRows: [string, string][] = [
+      ['Monthly Average Income', formatCurrency(aiAnalysis.incomeAnalysis.monthlyAvg)],
+      ['Savings Rate',           `${Math.round(aiAnalysis.savingsBehavior.savingsRate * 100)}%`],
+      ['Income Growth Trend',    aiAnalysis.incomeAnalysis.growthTrend],
+      ['Primary UPI Platform',   aiAnalysis.platformDetection.primaryPlatform],
+      ['Payment Cycle',          aiAnalysis.incomeAnalysis.paymentCycle ?? 'N/A'],
+      ['Spending Discipline',    `${Math.round(aiAnalysis.spendingIntelligence.spendingDiscipline)}/100`],
+    ]
+    // 2-column grid
+    snapRows.forEach(([label, value], i) => {
+      const col = i % 2
+      const xOffset = col === 1 ? (pageW - margin * 2) / 2 + margin : margin
+      if (col === 0 && i > 0) y += 0
+      doc.setFillColor(...(i % 2 === 0 ? C.bg : C.white))
+      if (col === 0) {
+        doc.setFillColor(...C.bg)
+        doc.rect(margin, y - 3, pageW - margin * 2, 8, 'F')
+      }
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.light)
+      doc.text(label, xOffset + 2, y + 2)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...C.dark)
+      doc.text(value, xOffset + 2, y + 7)
+      if (col === 1) y += 13
+    })
+    y += 8
+
+    addPageFooter(1)
+
+    // ═══════════════════════════════════════════════════════════════
+    //  PAGE 2
+    // ═══════════════════════════════════════════════════════════════
+    doc.addPage()
+
+    // ── Page 2 header strip ───────────────────────────────────────
+    doc.setFillColor(...C.dark)
+    doc.rect(0, 0, pageW, 20, 'F')
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...C.white)
+    doc.text('CredIQ Score Report  —  Details & Recommendations', margin, 13)
+    y = 30
+
+    // ── Key Insights ──────────────────────────────────────────────
+    if (insights?.length) {
+      y = sectionTitle('Key Insights', y)
+      insights.slice(0, 5).forEach((ins, idx) => {
+        const insColor: [number,number,number] = idx < 2 ? C.success : idx < 4 ? C.warning : C.danger
+        doc.setFillColor(...(idx % 2 === 0 ? C.bg : C.white))
+        doc.rect(margin, y - 3, pageW - margin * 2, 10, 'F')
+        // Bullet dot
+        doc.setFillColor(...insColor)
+        doc.circle(margin + 5, y + 1.5, 1.5, 'F')
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...C.dark)
+        const lines = doc.splitTextToSize(ins, pageW - margin * 2 - 14)
+        doc.text(lines, margin + 10, y + 2)
+        y += lines.length * 5.5 + 3
+      })
+      y += 6
+    }
+
+    // ── Top Improvements ─────────────────────────────────────────
+    y = sectionTitle('Top Actions to Improve Your Score', y)
+    const imp = improvements.slice(0, 6)
+    if (imp.length === 0) {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'italic')
+      doc.setTextColor(...C.light)
+      doc.text('No improvement plan available. Calculate your score first.', margin + 4, y + 4)
+      y += 12
+    } else {
+      imp.forEach((action, idx) => {
+        doc.setFillColor(...(idx % 2 === 0 ? C.bg : C.white))
+        doc.rect(margin, y - 2, pageW - margin * 2, 13, 'F')
+        // Priority dot
+        const dotColor = action.pointsGain >= 15 ? C.danger : action.pointsGain >= 8 ? C.warning : C.success
+        doc.setFillColor(...dotColor)
+        doc.circle(margin + 5, y + 4.5, 2, 'F')
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...C.dark)
+        doc.text(action.title, margin + 11, y + 5)
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...C.medium)
+        const desc = doc.splitTextToSize(action.description || '', pageW - margin * 2 - 50)
+        doc.text(desc, margin + 11, y + 10)
+        // Points badge
+        doc.setFillColor(...C.primaryLt)
+        doc.roundedRect(pageW - margin - 22, y + 1, 22, 8, 2, 2, 'F')
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...C.primary)
+        doc.text(`+${action.pointsGain} pts`, pageW - margin - 11, y + 6.5, { align: 'center' })
+        y += 16
+      })
+    }
+    y += 6
+
+    // ── Loan Eligibility Panel ────────────────────────────────────
+    y = sectionTitle('Loan Eligibility Details', y)
+    const panelBg = loanEligibility.eligible ? C.successLt : C.dangerLt
+    const panelTxt = loanEligibility.eligible ? C.success : C.danger
+    doc.setFillColor(...panelBg)
+    doc.roundedRect(margin, y, pageW - margin * 2, 28, 3, 3, 'F')
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...panelTxt)
+    doc.text(loanEligibility.eligible ? '✓  Eligible for Instant Loan' : '✗  Currently Not Eligible', margin + 6, y + 10)
+    if (loanEligibility.eligible) {
+      const loanRows: [string, string][] = [
+        ['Max Loan Amount', formatCurrency(loanEligibility.maxAmount)],
+        ['Interest Rate', `${loanEligibility.interestRate}% p.a.`],
+        ['Tenure', '12–36 months'],
+      ]
+      loanRows.forEach(([label, value], i) => {
+        const lx = margin + 6 + i * 62
+        doc.setFontSize(7.5)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...C.medium)
+        doc.text(label, lx, y + 19)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...C.dark)
+        doc.text(value, lx, y + 24.5)
+      })
+    } else {
+      doc.setFontSize(8.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...C.medium)
+      doc.text(`Minimum score required: 580  •  Your score: ${score}  •  Gap: ${Math.max(0, 580 - score)} points`, margin + 6, y + 19)
     }
     y += 36
 
-    // AI Analysis
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...darkColor)
-    doc.text('AI Financial Analysis', 20, y)
-    y += 7
-    const aiRows = [
-      ['Monthly Avg Income', formatCurrency(aiAnalysis.incomeAnalysis.monthlyAvg)],
-      ['Savings Rate', `${Math.round(aiAnalysis.savingsBehavior.savingsRate * 100)}%`],
-      ['Income Growth', aiAnalysis.incomeAnalysis.growthTrend],
-      ['Primary Platform', aiAnalysis.platformDetection.primaryPlatform],
-    ]
-    aiRows.forEach(([label, value]) => {
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...grayColor)
-      doc.text(label, 22, y)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(...darkColor)
-      doc.text(value, 90, y)
-      y += 6
-    })
-    y += 4
+    // ── Disclaimer ───────────────────────────────────────────────
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(...C.light)
+    const disclaimer = doc.splitTextToSize(
+      'This report is generated by CredIQ, an AI-powered financial profiling tool developed for the BWT Hackathon 2026 by Team ARKS. The CredScore and loan eligibility assessments are indicative only and should not be construed as formal credit assessments or financial advice.',
+      pageW - margin * 2,
+    )
+    doc.text(disclaimer, margin, y)
 
-    // Score Components
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...darkColor)
-    doc.text('Score Components', 20, y)
-    y += 7
-    const componentNames: Record<string, string> = {
-      incomeConsistency: 'Income Consistency',
-      paymentBehavior: 'Payment Behavior',
-      spendingIntelligence: 'Spending Intelligence',
-      savingsBehavior: 'Savings Behavior',
-      digitalFootprint: 'Digital Footprint',
-    }
-    Object.entries(components).forEach(([key, comp]) => {
-      const label = componentNames[key] || key
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...darkColor)
-      doc.text(label, 22, y)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(...primaryColor)
-      doc.text(`${comp.score}/100 (${comp.weight * 100}% weight)`, 90, y)
-      y += 5
-      // Bar background
-      doc.setFillColor(229, 231, 235)
-      doc.rect(22, y, 120, 3, 'F')
-      doc.setFillColor(...primaryColor)
-      doc.rect(22, y, (comp.score / 100) * 120, 3, 'F')
-      y += 7
-    })
-    y += 4
+    addPageFooter(2)
 
-    // Insights
-    if (insights?.length) {
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...darkColor)
-      doc.text('Key Insights', 20, y)
-      y += 7
-      insights.slice(0, 4).forEach((ins) => {
-        doc.setFontSize(9)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(...grayColor)
-        const lines = doc.splitTextToSize(`• ${ins}`, pageW - 44)
-        doc.text(lines, 22, y)
-        y += lines.length * 5
-      })
-    }
-
-    // Footer
-    doc.setFillColor(249, 250, 251)
-    doc.rect(0, 282, pageW, 15, 'F')
-    doc.setFontSize(8)
-    doc.setTextColor(...grayColor)
-    doc.text('CredIQ — AI-Powered Financial Identity Platform | Team ARKS | BWT Hackathon 2026', 20, 290)
-
-    doc.save(`CredIQ-Score-${score}-${new Date().toISOString().split('T')[0]}.pdf`)
-    toast.success('PDF exported successfully!')
+    doc.save(`CredIQ-Report-${score}-${new Date().toISOString().split('T')[0]}.pdf`)
+    toast.success('PDF report exported!')
   }
 
   const handleRecalculate = async () => {

@@ -26,37 +26,37 @@ export const WORKFLOW_WEBHOOKS: Record<AutomationEventType, { path: string; labe
   score_calculated: {
     path: '/webhook/crediq-score',
     label: 'Score Calculated',
-    description: 'Fires when AI calculates a new CredScore. Can trigger WhatsApp/email report.',
+    description: 'Runs every time your credit score is updated — sends you a summary via WhatsApp or email.',
     icon: '🎯',
   },
   scam_detected: {
     path: '/webhook/crediq-scam',
     label: 'Scam Detected',
-    description: 'Fires when ScamShield detects a high-risk number. Sends instant alert.',
+    description: 'Runs when a phone number or UPI ID is flagged as a scam — sends you an immediate warning.',
     icon: '🚨',
   },
   loan_applied: {
     path: '/webhook/crediq-loan',
     label: 'Loan Applied',
-    description: 'Fires when user applies for a loan product. Notifies NBFC partner.',
+    description: 'Runs when you apply for a loan — notifies the lender and sends you a confirmation.',
     icon: '🏦',
   },
   csv_uploaded: {
     path: '/webhook/crediq-csv',
     label: 'CSV Uploaded',
-    description: 'Fires when new UPI transactions are uploaded. Triggers re-analysis.',
+    description: 'Runs when you upload a new CSV file — automatically re-checks your transactions.',
     icon: '📊',
   },
   suspicious_transaction: {
     path: '/webhook/crediq-suspicious',
     label: 'Suspicious Transaction',
-    description: 'Fires when AI flags an unusual debit pattern.',
+    description: 'Runs when the AI spots an unusual payment — alerts you so you can review it.',
     icon: '⚠️',
   },
   score_improved: {
     path: '/webhook/crediq-improved',
     label: 'Score Improved',
-    description: 'Fires when score increases by 10+ points. Sends motivational alert.',
+    description: 'Runs when your score goes up by 10 or more points — sends you a congratulations message.',
     icon: '📈',
   },
 }
@@ -84,12 +84,14 @@ function saveEvent(event: AutomationEvent) {
 // ===== Check n8n connectivity =====
 export async function checkN8nHealth(): Promise<boolean> {
   try {
-    await axios.get(`${N8N_BASE}/healthz`, { timeout: 3000 })
+    // Use Vite proxy (/n8n) to avoid CORS in browser
+    const base = typeof window !== 'undefined' ? '/n8n' : N8N_BASE
+    await axios.get(`${base}/healthz`, { timeout: 4000 })
     return true
   } catch {
     try {
-      // Try the webhook base URL as fallback
-      await axios.get(N8N_BASE, { timeout: 3000 })
+      const base = typeof window !== 'undefined' ? '/n8n' : N8N_BASE
+      await axios.get(`${base}/`, { timeout: 4000 })
       return true
     } catch {
       return false

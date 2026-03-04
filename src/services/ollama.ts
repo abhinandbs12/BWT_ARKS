@@ -7,7 +7,7 @@ const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:14b'
 
 const ollamaClient = axios.create({
   baseURL: OLLAMA_BASE,
-  timeout: 120_000, // 2 min for large context
+  timeout: 60_000, // 60s — if it takes longer, fallback kicks in
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -30,7 +30,7 @@ async function generate(prompt: string, maxTokens = 2048): Promise<string> {
     stream: false,
     options: {
       temperature: 0.1,       // deterministic for financial data
-      num_ctx: 32000,         // 14B context window — handles 6 months of transactions
+      num_ctx: 4096,          // keep small for fast response
       top_p: 0.9,
       num_predict: maxTokens,
     },
@@ -42,8 +42,8 @@ async function generate(prompt: string, maxTokens = 2048): Promise<string> {
 
 // ===== UPI Transaction Analysis =====
 export async function analyzeTransactions(transactions: UPITransaction[]): Promise<AIAnalysisResult> {
-  // Build compact transaction string (7B handles ~3 months in one pass)
-  const txLines = transactions.slice(0, 180).map((tx, i) => {
+  // Build compact transaction string — limit to 60 to stay within num_ctx: 4096
+  const txLines = transactions.slice(0, 60).map((tx, i) => {
     const date = new Date(tx.date).toISOString().split('T')[0]
     return `[${i + 1}] ${date} | ${tx.type} | ₹${tx.amount} | "${tx.description}"`
   }).join('\n')
@@ -105,7 +105,7 @@ OUTPUT this exact JSON structure:
   }
 
   try {
-    const raw = await generate(prompt, 1500)
+    const raw = await generate(prompt, 800)
     // Extract JSON from response (handle any surrounding text)
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('No JSON in response')

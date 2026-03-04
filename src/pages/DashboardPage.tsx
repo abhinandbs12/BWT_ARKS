@@ -46,17 +46,16 @@ export default function DashboardPage() {
     }
   }
 
-  // Load mock data on first visit
+  // Load mock data on first visit; rebuild stats if transactions exist but stats were lost (not persisted)
   useEffect(() => {
     if (!transactions.length) {
       const txs = generateMockTransactions()
       setTransactions(txs)
-      const stats = buildDashboardStats(txs)
-      setDashboardStats(stats)
-      setStatsLoading(false)
-    } else {
-      setStatsLoading(false)
+      setDashboardStats(buildDashboardStats(txs))
+    } else if (!dashboardStats) {
+      setDashboardStats(buildDashboardStats(transactions))
     }
+    setStatsLoading(false)
   }, []) // eslint-disable-line
 
   const handleCalculateScore = async () => {
@@ -67,8 +66,8 @@ export default function DashboardPage() {
     setCalculating(true)
     const toastId = toast.loading(
       ollamaConnected
-        ? '🤖 Qwen2.5-Coder:14B analyzing your transactions…'
-        : '📊 Analyzing with smart fallback (Ollama offline)…',
+        ? '🤖 AI analyzing transactions… (up to 60s)'
+        : '📊 Analyzing with smart fallback…',
     )
     try {
       const aiResult = await analyzeTransactions(transactions)

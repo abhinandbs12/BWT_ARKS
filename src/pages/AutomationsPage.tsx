@@ -30,10 +30,10 @@ const STATUS_ICONS: Record<AutomationEvent['status'], React.ReactNode> = {
 }
 
 const WORKFLOW_DOCS: Partial<Record<AutomationEventType, string[]>> = {
-  score_calculated: ['Add email node → notify user of new score', 'Connect Twilio → send WhatsApp summary', 'Add Google Sheets → log scores over time'],
-  scam_detected:   ['Add Twilio SMS → alert user instantly', 'Post to Slack/Discord fraud channel', 'Log to Firestore via HTTP node'],
-  loan_applied:    ['Notify NBFC partner via HTTP POST', 'Create Airtable record for CRM', 'Send confirmation email to user'],
-  csv_uploaded:    ['Trigger Ollama re-analysis pipeline', 'Archive to Google Drive', 'Notify admin dashboard'],
+  score_calculated: ['Send WhatsApp message with the new score', 'Send an email summary to the user', 'Save score history to Google Sheets'],
+  scam_detected:   ['Send SMS alert to user immediately', 'Post warning to a team WhatsApp/Slack group', 'Save the scam report to a spreadsheet'],
+  loan_applied:    ['Send loan details to the lending partner', 'Send a confirmation email to the user', 'Save the application in a Google Sheet'],
+  csv_uploaded:    ['Re-calculate the score automatically', 'Save the uploaded file to Google Drive', 'Notify the admin that new data is available'],
 }
 
 export default function AutomationsPage() {
@@ -90,7 +90,7 @@ export default function AutomationsPage() {
             Automations
           </h1>
           <p className="text-neutral-gray text-sm mt-0.5">
-            n8n workflow triggers — fire on key CredIQ events
+            Automatically send alerts &amp; notifications when something important happens in CredIQ
           </p>
         </div>
 
@@ -133,9 +133,9 @@ export default function AutomationsPage() {
           <div className="flex items-start gap-3">
             <WifiOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-medium text-amber-800">n8n is not running</p>
+              <p className="font-medium text-amber-800">Automation engine is not running</p>
               <p className="text-sm text-amber-700 mt-0.5 mb-3">
-                Start it with Docker to enable live automation webhooks. Events are logged locally until then.
+                Start it with the command below to enable WhatsApp/SMS/email alerts. Until then, events are only saved locally.
               </p>
               <code className="block bg-neutral-dark text-green-400 text-xs rounded-lg px-4 py-3 font-mono">
                 docker-compose up -d n8n
@@ -164,7 +164,7 @@ export default function AutomationsPage() {
       {/* Workflow cards */}
       <div>
         <h2 className="text-lg font-semibold text-neutral-dark mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-primary" /> Available Workflows
+          <Zap className="w-4 h-4 text-primary" /> What Gets Triggered
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           {(Object.entries(WORKFLOW_WEBHOOKS) as [AutomationEventType, typeof WORKFLOW_WEBHOOKS[AutomationEventType]][]).map(
@@ -200,7 +200,7 @@ export default function AutomationsPage() {
 
                   {docs.length > 0 && (
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-neutral-dark mb-1.5">Extend with:</p>
+                      <p className="text-xs font-medium text-neutral-dark mb-1.5">You can also use it to:</p>
                       <ul className="space-y-1">
                         {docs.map((d) => (
                           <li key={d} className="flex items-start gap-1.5 text-xs text-neutral-gray">
@@ -228,14 +228,14 @@ export default function AutomationsPage() {
       {/* Setup guide */}
       <div className="card border border-primary/20 bg-primary-light">
         <h3 className="font-semibold text-neutral-dark mb-3 flex items-center gap-2">
-          <Download className="w-4 h-4 text-primary" /> Import Pre-built Workflows
+          <Download className="w-4 h-4 text-primary" /> How to Set Up Automations
         </h3>
         <div className="space-y-2 text-sm text-neutral-gray mb-4">
-          <p>1. Start n8n: <code className="bg-neutral-dark text-green-400 px-2 py-0.5 rounded text-xs font-mono">docker-compose up -d n8n</code></p>
-          <p>2. Open <a href="http://localhost:5678" target="_blank" rel="noopener noreferrer" className="text-primary underline">localhost:5678</a> → Login: <strong>admin / crediq2026</strong></p>
+          <p>1. Start the automation engine: <code className="bg-neutral-dark text-green-400 px-2 py-0.5 rounded text-xs font-mono">docker-compose up -d n8n</code></p>
+          <p>2. Open <a href="http://localhost:5678" target="_blank" rel="noopener noreferrer" className="text-primary underline">localhost:5678</a> and login with <strong>admin / crediq2026</strong></p>
           <p>3. Click <strong>+ New workflow → Import from file</strong></p>
-          <p>4. Import JSON files from <code className="bg-neutral-dark text-green-400 px-2 py-0.5 rounded text-xs font-mono">BWT_ARKS/n8n-workflows/</code></p>
-          <p>5. Activate each workflow → webhooks go live instantly</p>
+          <p>4. Upload the workflow files from the <code className="bg-neutral-dark text-green-400 px-2 py-0.5 rounded text-xs font-mono">n8n-workflows/</code> folder</p>
+          <p>5. Turn on the workflow — alerts will start working immediately</p>
         </div>
 
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -269,8 +269,8 @@ export default function AutomationsPage() {
         {events.length === 0 ? (
           <div className="card text-center py-12 text-neutral-gray">
             <Workflow className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No events yet</p>
-            <p className="text-sm mt-1">Click "Test Fire" on any workflow above to generate an event</p>
+            <p className="font-medium">Nothing has fired yet</p>
+            <p className="text-sm mt-1">Click "Test Fire" on any card above to try it out</p>
           </div>
         ) : (
           <div className="space-y-2">

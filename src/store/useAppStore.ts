@@ -127,6 +127,7 @@ export const useAppStore = create<AppStore>()(
         isAuthenticated: state.isAuthenticated,
         transactions: state.transactions,
         credScore: state.credScore,
+        dashboardStats: state.dashboardStats,
         scamsBlocked: state.scamsBlocked,
         improvements: state.improvements,
         ollamaModel: state.ollamaModel,

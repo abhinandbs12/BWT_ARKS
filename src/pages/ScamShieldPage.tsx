@@ -134,10 +134,17 @@ export default function ScamShieldPage() {
       { status: 'pending', expanded: false },
     ])
 
+  const handleDemoCheck = (input: string) => {
+    reset({ input, context: '' })
+    // Small tick so react-hook-form registers the value before submit
+    setTimeout(() => handleSubmit(handleCheck)(), 0)
+  }
+
   const handleCheck = async (data: CheckForm) => {
     setIsScanning(true)
     setScanResult(null)
     resetLayers()
+    try {
     const input = data.input.trim()
     const context = data.context?.trim() || 'No additional context'
     let blocked = false
@@ -252,7 +259,13 @@ export default function ScamShieldPage() {
       incrementScamsBlocked()
       triggerScamDetected(input, final.riskLevel, final.finalRiskScore, final.scamType ?? 'unknown')
     }
-    setIsScanning(false)
+    } catch (err) {
+      console.error('ScamShield scan error:', err)
+      toast.error('Scan failed — please try again.')
+      resetLayers()
+    } finally {
+      setIsScanning(false)
+    }
   }
 
   const handleReport = async (data: ReportForm) => {
@@ -318,7 +331,7 @@ export default function ScamShieldPage() {
               Try:&nbsp;
               {LOCAL_SCAM_DB.slice(0, 3).map((s) => (
                 <button key={s.id} type="button" className="text-primary underline mr-2"
-                  onClick={() => reset({ input: s.phone ?? s.upi_id ?? '', context: '' })}>
+                  onClick={() => handleDemoCheck(s.phone ?? s.upi_id ?? '')}>
                   {s.phone ?? s.upi_id}
                 </button>
               ))}
@@ -504,7 +517,7 @@ export default function ScamShieldPage() {
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="submit" disabled={isSubmitting} className="btn-danger flex-1">
-                  {isSubmitting ? 'Saving…' : '🚨 Submit to Supabase'}
+                  {isSubmitting ? 'Saving…' : '🚨 Register Complaint'}
                 </button>
                 <button
                   type="button"
